@@ -24,9 +24,12 @@ Citizen.CreateThread(function ()
   while ESX == nil do
     TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
     Citizen.Wait(0)
- 	PlayerData = ESX.GetPlayerData()
   end
 end)
+
+Citizen.CreateThread(function() while true do if(ESX.IsPlayerLoaded()) then
+  PlayerData = ESX.GetPlayerData()
+end Citizen.Wait(1000) end end)
 
 RegisterNetEvent('esx:playerLoaded')
 AddEventHandler('esx:playerLoaded', function(xPlayer)
@@ -50,8 +53,9 @@ end)
 
 --keycontrols
 Citizen.CreateThread(function ()
-  while true do
+  while true do 
     Citizen.Wait(0)
+    if(ESX.IsPlayerLoaded()) then
 
       local playerPed = GetPlayerPed(-1)
 
@@ -85,36 +89,32 @@ Citizen.CreateThread(function ()
 
       end
     end
-  end       
+  end end      
 end)
 
 -- Display markers
-Citizen.CreateThread(function ()
-  while true do
-    Wait(0)
-    PlayerData = ESX.GetPlayerData()
-    local coords = GetEntityCoords(GetPlayerPed(-1))
+Citizen.CreateThread(function() while true do Citizen.Wait(0) if(ESX.IsPlayerLoaded()) then
+  PlayerData = ESX.GetPlayerData()
+  local coords = GetEntityCoords(GetPlayerPed(-1))
 
-    for k,v in pairs(Config.Zones) do
-      if PlayerData.job.name == v.Out then
+  for k,v in pairs(Config.Zones) do
+    if PlayerData.job.name == v.Out then
+      for i,p in ipairs(v.Positions) do
+        if(v.Type ~= -1 and GetDistanceBetweenCoords(coords, p.x, p.y, p.z, true) < Config.DrawDistance) then
+          DrawMarker(v.Type, p.x, p.y, p.z, 0.0, 0.0, 0.0, 0, 0.0, 0.0, v.Size.x, v.Size.y, v.Size.z, 255, 0, 0, 100, false, true, 2, false, false, false, false)
+        end
+      end
+    else
+      if PlayerData.job.name == v.In then
         for i,p in ipairs(v.Positions) do
           if(v.Type ~= -1 and GetDistanceBetweenCoords(coords, p.x, p.y, p.z, true) < Config.DrawDistance) then
-            DrawMarker(v.Type, p.x, p.y, p.z, 0.0, 0.0, 0.0, 0, 0.0, 0.0, v.Size.x, v.Size.y, v.Size.z, 255, 0, 0, 100, false, true, 2, false, false, false, false)
-          end
-        end
-      else
-        if PlayerData.job.name == v.In then
-          for i,p in ipairs(v.Positions) do
-            if(v.Type ~= -1 and GetDistanceBetweenCoords(coords, p.x, p.y, p.z, true) < Config.DrawDistance) then
-              DrawMarker(v.Type, p.x, p.y, p.z, 0.0, 0.0, 0.0, 0, 0.0, 0.0, v.Size.x, v.Size.y, v.Size.z, 0, 255, 0, 100, false, true, 2, false, false, false, false)
-            end
+            DrawMarker(v.Type, p.x, p.y, p.z, 0.0, 0.0, 0.0, 0, 0.0, 0.0, v.Size.x, v.Size.y, v.Size.z, 0, 255, 0, 100, false, true, 2, false, false, false, false)
           end
         end
       end
     end
-
   end
-end)
+end end end)
 
 -- Enter / Exit marker events
 Citizen.CreateThread(function ()
@@ -149,11 +149,13 @@ end)
 
 --notification
 function sendNotification(message, messageType, messageTimeout)
-	TriggerEvent("pNotify:SendNotification", {
-		text = message,
-		type = messageType,
-		queue = "duty",
-		timeout = messageTimeout,
-		layout = "bottomCenter"
-	})
+	-- TriggerEvent("pNotify:SendNotification", {
+	-- 	text = message,
+	-- 	type = messageType,
+	-- 	queue = "duty",
+	-- 	timeout = messageTimeout,
+	-- 	layout = "bottomCenter"
+	-- })
+
+  exports['okokNotify']:Alert("Life-V", message, 2000, 'info')
 end
